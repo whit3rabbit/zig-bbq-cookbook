@@ -6,7 +6,53 @@ You want to start programming in Zig. You need to download it, install it, and m
 
 ## Solution
 
-### Step 1: Download Zig
+There are two ways to install Zig: using a package manager (easiest) or downloading manually (for specific version control).
+
+### Option A: Package Managers (Recommended)
+
+The easiest way to install Zig is through your system's package manager. For a complete list of options, see the [official Zig package manager guide](https://github.com/ziglang/zig/wiki/Install-Zig-from-a-Package-Manager).
+
+**macOS (Homebrew):**
+```bash
+brew install zig
+```
+
+**Linux (various):**
+```bash
+# Ubuntu/Debian (via snap)
+snap install zig --classic --beta
+
+# Arch Linux
+pacman -S zig
+
+# Fedora
+dnf install zig
+
+# Nix
+nix-env -i zig
+```
+
+**Windows:**
+```powershell
+# Using winget
+winget install zig.zig
+
+# Using Scoop
+scoop install zig
+
+# Using Chocolatey
+choco install zig
+```
+
+After installing via package manager, skip to **Step 3: Verify Installation**.
+
+---
+
+### Option B: Manual Download
+
+If you need a specific version (like 0.15.2 for this cookbook) or your package manager doesn't have Zig, download it manually.
+
+#### Step 1: Download Zig
 
 Visit [https://ziglang.org/download/](https://ziglang.org/download/) and choose:
 
@@ -18,7 +64,7 @@ Download the archive for your platform:
 - **Linux**: `zig-linux-x86_64-0.15.2.tar.xz` or your architecture
 - **Windows**: `zig-windows-x86_64-0.15.2.zip`
 
-### Step 2: Extract and Add to PATH
+#### Step 2: Extract and Add to PATH
 
 **macOS/Linux:**
 ```bash
@@ -39,6 +85,8 @@ source ~/.zshrc  # or ~/.bashrc
 1. Extract the ZIP file to `C:\zig\`
 2. Add `C:\zig\` to your PATH environment variable
 3. Restart your terminal
+
+---
 
 ### Step 3: Verify Installation
 

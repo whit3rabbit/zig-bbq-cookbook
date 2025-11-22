@@ -3,6 +3,11 @@
 //
 // This recipe demonstrates how to verify your Zig installation and use
 // basic toolchain commands. These examples assume Zig is already installed.
+//
+// Installation options:
+//   - Package managers (easiest): brew, apt, pacman, winget, scoop, etc.
+//   - Manual download from https://ziglang.org/download/
+//   - See: https://github.com/ziglang/zig/wiki/Install-Zig-from-a-Package-Manager
 
 const std = @import("std");
 const testing = std.testing;
