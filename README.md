@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://whit3rabbit.github.io/zig-bbq-cookbook"><img src="https://img.shields.io/badge/docs-live-blue.svg" alt="Documentation"></a>
-  <a href="https://github.com/whit3rabbit/zig-bbq-cookbook/actions"><img src="https://img.shields.io/github/actions/workflow/status/whit3rabbit/zig-bbq-cookbook/gh-pages.yml?branch=v0.15.2" alt="Build Status"></a>
+  <a href="https://github.com/whit3rabbit/zig-bbq-cookbook/actions"><img src="https://img.shields.io/github/actions/workflow/status/whit3rabbit/zig-bbq-cookbook/gh-pages.yml?branch=main" alt="Build Status"></a>
   <a href="https://ziglang.org/download/"><img src="https://img.shields.io/badge/zig-0.15.2-orange.svg" alt="Zig 0.15.2"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
 </p>
