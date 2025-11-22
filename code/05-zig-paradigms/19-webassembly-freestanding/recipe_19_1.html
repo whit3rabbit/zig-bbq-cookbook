@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Recipe 19.1: Basic WebAssembly Module</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recipe 19.1: Basic WebAssembly Module</h1>
+    <p>This page demonstrates calling Zig functions compiled to WebAssembly.</p>
+
+    <h2>Build Instructions</h2>
+    <pre>zig build-lib -O ReleaseSmall -target wasm32-freestanding -dynamic -rdynamic recipe_19_1.zig</pre>
+
+    <h2>Test Functions</h2>
+
+    <div>
+        <h3>Addition</h3>
+        <input type="number" id="add-a" value="5" /> +
+        <input type="number" id="add-b" value="3" />
+        <button onclick="testAdd()">Calculate</button>
+        <div class="result" id="add-result"></div>
+    </div>
+
+    <div>
+        <h3>Multiplication</h3>
+        <input type="number" id="mul-a" value="7" /> ×
+        <input type="number" id="mul-b" value="6" />
+        <button onclick="testMultiply()">Calculate</button>
+        <div class="result" id="mul-result"></div>
+    </div>
+
+    <div>
+        <h3>Fibonacci</h3>
+        <input type="number" id="fib-n" value="10" min="0" />
+        <button onclick="testFibonacci()">Calculate</button>
+        <div class="result" id="fib-result"></div>
+    </div>
+
+    <div>
+        <h3>Prime Check</h3>
+        <input type="number" id="prime-n" value="17" min="0" />
+        <button onclick="testPrime()">Check</button>
+        <div class="result" id="prime-result"></div>
+    </div>
+
+    <script>
+        let wasmModule;
+
+        // Load the WebAssembly module
+        async function loadWasm() {
+            try {
+                const response = await fetch('recipe_19_1.wasm');
+                const bytes = await response.arrayBuffer();
+                const { instance } = await WebAssembly.instantiate(bytes);
+                wasmModule = instance.exports;
+                console.log('WASM module loaded successfully');
+                console.log('Exported functions:', Object.keys(wasmModule));
+            } catch (error) {
+                console.error('Failed to load WASM:', error);
+                alert('Failed to load WASM module. Make sure recipe_19_1.wasm is in the same directory.');
+            }
+        }
+
+        function testAdd() {
+            const a = parseInt(document.getElementById('add-a').value);
+            const b = parseInt(document.getElementById('add-b').value);
+            const result = wasmModule.add(a, b);
+            document.getElementById('add-result').textContent = `${a} + ${b} = ${result}`;
+        }
+
+        function testMultiply() {
+            const a = parseInt(document.getElementById('mul-a').value);
+            const b = parseInt(document.getElementById('mul-b').value);
+            const result = wasmModule.multiply(a, b);
+            document.getElementById('mul-result').textContent = `${a} × ${b} = ${result}`;
+        }
+
+        function testFibonacci() {
+            const n = parseInt(document.getElementById('fib-n').value);
+            const result = wasmModule.fibonacci(n);
+            document.getElementById('fib-result').textContent = `fibonacci(${n}) = ${result}`;
+        }
+
+        function testPrime() {
+            const n = parseInt(document.getElementById('prime-n').value);
+            const result = wasmModule.isPrime(n);
+            document.getElementById('prime-result').textContent =
+                `${n} is ${result ? 'PRIME' : 'NOT PRIME'}`;
+        }
+
+        // Load WASM on page load
+        loadWasm();
+    </script>
+</body>
+</html>

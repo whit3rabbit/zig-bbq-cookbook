@@ -1,0 +1,3 @@
+Welcome to {{app_name}}!
+Version: {{version}}
+Status: {{status}}

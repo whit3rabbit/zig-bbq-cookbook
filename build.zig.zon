@@ -1,0 +1,22 @@
+.{
+    .fingerprint = 0x92027684d9677c84,
+    .name = .zig_bbq_cookbook,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.15.2",
+
+    .dependencies = .{
+        // Note: Zine is used as a standalone tool, not a library dependency
+        // Install with: zig fetch --save git+https://github.com/kristoff-it/zine
+        // Run with: zine (for dev server) or zine build (for static site)
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "zine.ziggy",
+        "content",
+        "layouts",
+        "assets",
+        "code",
+    },
+}

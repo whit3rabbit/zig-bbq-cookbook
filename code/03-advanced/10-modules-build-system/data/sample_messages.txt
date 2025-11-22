@@ -1,0 +1,4 @@
+ERROR: An error occurred
+WARNING: This is a warning
+INFO: Information message
+DEBUG: Debug details

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Recipe 19.2: Advanced Function Exports</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+        .demo-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .result {
+            background: #e7f3ff;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            border-left: 4px solid #007bff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100px;
+            margin: 5px;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recipe 19.2: Advanced Function Exports</h1>
+    <p>Demonstrating advanced patterns for exporting Zig functions to JavaScript.</p>
+
+    <h2>Build Instructions</h2>
+    <pre>zig build-lib -O ReleaseSmall -target wasm32-freestanding -dynamic -rdynamic recipe_19_2.zig</pre>
+
+    <div class="demo-section">
+        <h3>Counter (Global State)</h3>
+        <p>Current counter: <span id="counter-value">0</span></p>
+        <button onclick="increment()">Increment</button>
+        <button onclick="reset()">Reset</button>
+        <div class="result" id="counter-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Division with Remainder</h3>
+        <input type="number" id="dividend" value="17" /> ÷
+        <input type="number" id="divisor" value="5" />
+        <button onclick="testDivision()">Calculate</button>
+        <div class="result" id="division-result"></div>
+        <p><small>Uses pointer parameter to return remainder</small></p>
+    </div>
+
+    <div class="demo-section">
+        <h3>Distance Calculation</h3>
+        <p>Point 1: (<input type="number" id="x1" value="0" style="width: 60px" />,
+                     <input type="number" id="y1" value="0" style="width: 60px" />)</p>
+        <p>Point 2: (<input type="number" id="x2" value="3" style="width: 60px" />,
+                     <input type="number" id="y2" value="4" style="width: 60px" />)</p>
+        <button onclick="testDistance()">Calculate Distance</button>
+        <button onclick="showLastCalc()">Show Last Calculation</button>
+        <div class="result" id="distance-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Point Objects (Pointers)</h3>
+        <button onclick="testPoints()">Create Points and Calculate Distance</button>
+        <div class="result" id="points-result"></div>
+        <p><small>Points stored in WASM linear memory</small></p>
+    </div>
+
+    <div class="demo-section">
+        <h3>Range Check</h3>
+        <input type="number" id="range-value" value="5" />
+        is in range [<input type="number" id="range-min" value="0" style="width: 60px" />,
+        <input type="number" id="range-max" value="10" style="width: 60px" />]
+        <button onclick="testRange()">Check</button>
+        <div class="result" id="range-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Clamp Function</h3>
+        <input type="number" id="clamp-value" value="15" />
+        clamped to [<input type="number" id="clamp-min" value="0" style="width: 60px" />,
+        <input type="number" id="clamp-max" value="10" style="width: 60px" />]
+        <button onclick="testClamp()">Clamp</button>
+        <div class="result" id="clamp-result"></div>
+    </div>
+
+    <script>
+        let wasm;
+        let memory;
+
+        async function loadWasm() {
+            try {
+                const response = await fetch('recipe_19_2.wasm');
+                const bytes = await response.arrayBuffer();
+                const { instance } = await WebAssembly.instantiate(bytes);
+                wasm = instance.exports;
+                memory = wasm.memory;
+                console.log('WASM module loaded');
+                console.log('Exported functions:', Object.keys(wasm));
+                updateCounter();
+            } catch (error) {
+                console.error('Failed to load WASM:', error);
+                alert('Failed to load WASM. Ensure recipe_19_2.wasm is in the same directory.');
+            }
+        }
+
+        function updateCounter() {
+            const value = wasm.getCounter();
+            document.getElementById('counter-value').textContent = value;
+        }
+
+        function increment() {
+            const newValue = wasm.incrementCounter();
+            updateCounter();
+            document.getElementById('counter-result').textContent =
+                `Counter incremented to ${newValue}`;
+        }
+
+        function reset() {
+            wasm.resetCounter();
+            updateCounter();
+            document.getElementById('counter-result').textContent = 'Counter reset to 0';
+        }
+
+        function testDivision() {
+            const dividend = parseInt(document.getElementById('dividend').value);
+            const divisor = parseInt(document.getElementById('divisor').value);
+
+            // Allocate 4 bytes for i32 remainder
+            const remainderPtr = wasm.__heap_base || 0;
+            const quotient = wasm.divideWithRemainder(dividend, divisor, remainderPtr);
+
+            // Read remainder from memory
+            const memView = new Int32Array(memory.buffer);
+            const remainder = memView[remainderPtr / 4];
+
+            document.getElementById('division-result').textContent =
+                `${dividend} ÷ ${divisor} = ${quotient} remainder ${remainder}`;
+        }
+
+        function testDistance() {
+            const x1 = parseFloat(document.getElementById('x1').value);
+            const y1 = parseFloat(document.getElementById('y1').value);
+            const x2 = parseFloat(document.getElementById('x2').value);
+            const y2 = parseFloat(document.getElementById('y2').value);
+
+            const distance = wasm.calculateDistance(x1, y1, x2, y2);
+            document.getElementById('distance-result').textContent =
+                `Distance from (${x1}, ${y1}) to (${x2}, ${y2}) = ${distance.toFixed(3)}`;
+        }
+
+        function showLastCalc() {
+            const last = wasm.getLastCalculation();
+            document.getElementById('distance-result').textContent =
+                `Last calculation result: ${last.toFixed(3)}`;
+        }
+
+        function testPoints() {
+            // Create two points in WASM memory
+            const p1 = wasm.createPoint(1.0, 2.0);
+            const p2 = wasm.createPoint(4.0, 6.0);
+
+            // Get coordinates
+            const x1 = wasm.getPointX(p1);
+            const y1 = wasm.getPointY(p1);
+            const x2 = wasm.getPointX(p2);
+            const y2 = wasm.getPointY(p2);
+
+            // Calculate distance
+            const distance = wasm.pointDistance(p1, p2);
+
+            document.getElementById('points-result').innerHTML =
+                `Point 1: (${x1}, ${y1}) at address ${p1}<br>` +
+                `Point 2: (${x2}, ${y2}) at address ${p2}<br>` +
+                `Distance: ${distance.toFixed(3)}`;
+        }
+
+        function testRange() {
+            const value = parseFloat(document.getElementById('range-value').value);
+            const min = parseFloat(document.getElementById('range-min').value);
+            const max = parseFloat(document.getElementById('range-max').value);
+
+            const inRange = wasm.isInRange(value, min, max);
+            document.getElementById('range-result').textContent =
+                `${value} is ${inRange ? 'IN' : 'NOT in'} range [${min}, ${max}]`;
+        }
+
+        function testClamp() {
+            const value = parseFloat(document.getElementById('clamp-value').value);
+            const min = parseFloat(document.getElementById('clamp-min').value);
+            const max = parseFloat(document.getElementById('clamp-max').value);
+
+            const clamped = wasm.clamp(value, min, max);
+            document.getElementById('clamp-result').textContent =
+                `clamp(${value}, ${min}, ${max}) = ${clamped}`;
+        }
+
+        loadWasm();
+    </script>
+</body>
+</html>

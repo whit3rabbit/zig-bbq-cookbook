@@ -1,0 +1,44 @@
+[book]
+title = "The Zig BBQ Cookbook"
+description = "A comprehensive cookbook-style guide for Zig programming (v0.15.2)"
+authors = ["whit3rabbit"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+default-theme = "rust"
+preferred-dark-theme = "navy"
+mathjax-support = false
+no-section-label = true
+git-repository-url = "https://github.com/whit3rabbit/zig-bbq-cookbook"
+edit-url-template = "https://github.com/whit3rabbit/zig-bbq-cookbook/edit/main/src/{path}"
+
+additional-css = []
+additional-js = []
+
+[output.html.print]
+enable = true
+
+[output.html.search]
+enable = true
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 1
+boost-paragraph = 1
+expand = true
+heading-split-level = 3
+
+[output.html.fold]
+enable = true
+level = 0
+
+[output.html.playground]
+editable = false
+copyable = true
+line-numbers = true

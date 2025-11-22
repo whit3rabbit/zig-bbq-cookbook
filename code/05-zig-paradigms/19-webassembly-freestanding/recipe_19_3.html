@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Recipe 19.3: Importing JavaScript Functions</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+        .demo-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .result {
+            background: #e7f3ff;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            border-left: 4px solid #007bff;
+        }
+        #console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recipe 19.3: Importing JavaScript Functions</h1>
+    <p>Demonstrating how Zig code can call JavaScript functions in WebAssembly.</p>
+
+    <h2>Console Output</h2>
+    <div id="console-output"></div>
+    <button onclick="clearConsole()">Clear Console</button>
+
+    <div class="demo-section">
+        <h3>Console Logging from Zig</h3>
+        <button onclick="testConsoleLog()">Log Value (42.5)</button>
+        <button onclick="testConsoleLogInt()">Log Integer (100)</button>
+        <button onclick="testConsoleLogStr()">Log String</button>
+    </div>
+
+    <div class="demo-section">
+        <h3>JavaScript Math Functions</h3>
+        <input type="number" id="pow-base" value="2" step="0.1" /> <sup>
+        <input type="number" id="pow-exp" value="8" step="0.1" /></sup>
+        <button onclick="testPower()">Calculate Power</button>
+        <div class="result" id="pow-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Circle Area Calculation</h3>
+        <p>Radius: <input type="number" id="radius" value="5" step="0.1" /></p>
+        <button onclick="testCircleArea()">Calculate Area</button>
+        <div class="result" id="area-result"></div>
+        <small>Uses Math.pow and logs to console</small>
+    </div>
+
+    <div class="demo-section">
+        <h3>Trigonometry (sin² + cos² = 1)</h3>
+        <p>Angle: <input type="number" id="angle" value="0.5" step="0.1" /></p>
+        <button onclick="testTrig()">Test Identity</button>
+        <div class="result" id="trig-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Random Number Generation</h3>
+        <button onclick="testDice()">Roll Dice (1-6)</button>
+        <button onclick="testRandomRange()">Random 10-20</button>
+        <div class="result" id="random-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Array Shuffle</h3>
+        <button onclick="testShuffle()">Shuffle Array [1,2,3,4,5]</button>
+        <div class="result" id="shuffle-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Timestamps</h3>
+        <button onclick="testTimestamp()">Get Current Timestamp</button>
+        <button onclick="testElapsed()">Calculate Elapsed Time</button>
+        <div class="result" id="time-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Custom Callbacks</h3>
+        <input type="number" id="callback-value" value="5" />
+        <button onclick="testCallback()">Process with Callback</button>
+        <div class="result" id="callback-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Benchmark</h3>
+        <input type="number" id="fib-n" value="30" />
+        <button onclick="testBenchmark()">Benchmark Fibonacci</button>
+        <div class="result" id="benchmark-result"></div>
+    </div>
+
+    <script>
+        let wasm;
+        let consoleOutput = [];
+
+        // Import object with JavaScript functions
+        const importObject = {
+            env: {
+                consoleLog: (value) => {
+                    logToConsole(`[WASM] consoleLog: ${value}`);
+                },
+                consoleLogInt: (value) => {
+                    logToConsole(`[WASM] consoleLogInt: ${value}`);
+                },
+                consoleLogStr: (ptr, len) => {
+                    const bytes = new Uint8Array(wasm.memory.buffer, ptr, len);
+                    const str = new TextDecoder().decode(bytes);
+                    logToConsole(`[WASM] consoleLogStr: "${str}"`);
+                },
+                jsRandom: () => {
+                    return Math.random();
+                },
+                jsDateNow: () => {
+                    return Date.now();
+                },
+                jsMathPow: (base, exponent) => {
+                    return Math.pow(base, exponent);
+                },
+                jsMathSin: (x) => {
+                    return Math.sin(x);
+                },
+                jsMathCos: (x) => {
+                    return Math.cos(x);
+                },
+                jsCallback: (value) => {
+                    logToConsole(`[Callback received] value: ${value}`);
+                },
+                jsProcessData: (data) => {
+                    const processed = data * 3 + 7;
+                    logToConsole(`[jsProcessData] ${data} -> ${processed}`);
+                    return processed;
+                }
+            }
+        };
+
+        async function loadWasm() {
+            try {
+                const response = await fetch('recipe_19_3.wasm');
+                const bytes = await response.arrayBuffer();
+                const { instance } = await WebAssembly.instantiate(bytes, importObject);
+                wasm = instance.exports;
+                logToConsole('WASM module loaded successfully');
+            } catch (error) {
+                console.error('Failed to load WASM:', error);
+                alert('Failed to load WASM. Ensure recipe_19_3.wasm is in the same directory.');
+            }
+        }
+
+        function logToConsole(msg) {
+            consoleOutput.push(msg);
+            const el = document.getElementById('console-output');
+            el.innerHTML = consoleOutput.join('<br>');
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function clearConsole() {
+            consoleOutput = [];
+            document.getElementById('console-output').innerHTML = '';
+        }
+
+        function testConsoleLog() {
+            wasm.logValue(42.5);
+        }
+
+        function testConsoleLogInt() {
+            wasm.logInteger(100);
+        }
+
+        function testConsoleLogStr() {
+            wasm.logMessage();
+        }
+
+        function testPower() {
+            const base = parseFloat(document.getElementById('pow-base').value);
+            const exp = parseFloat(document.getElementById('pow-exp').value);
+            const result = wasm.calculatePower(base, exp);
+            document.getElementById('pow-result').textContent =
+                `${base}^${exp} = ${result}`;
+        }
+
+        function testCircleArea() {
+            const radius = parseFloat(document.getElementById('radius').value);
+            const area = wasm.calculateCircleArea(radius);
+            document.getElementById('area-result').textContent =
+                `Area = ${area.toFixed(2)} (check console for logged value)`;
+        }
+
+        function testTrig() {
+            const angle = parseFloat(document.getElementById('angle').value);
+            const result = wasm.calculateSinCos(angle);
+            document.getElementById('trig-result').textContent =
+                `sin²(${angle}) + cos²(${angle}) = ${result.toFixed(10)}`;
+        }
+
+        function testDice() {
+            const result = wasm.rollDice();
+            document.getElementById('random-result').textContent = `Rolled: ${result}`;
+        }
+
+        function testRandomRange() {
+            const result = wasm.randomInRange(10, 20);
+            document.getElementById('random-result').textContent =
+                `Random [10-20]: ${result}`;
+        }
+
+        function testShuffle() {
+            const arr = new Int32Array([1, 2, 3, 4, 5]);
+            const ptr = wasm.__heap_base || 0;
+            const view = new Int32Array(wasm.memory.buffer);
+
+            // Copy array to WASM memory
+            for (let i = 0; i < arr.length; i++) {
+                view[ptr / 4 + i] = arr[i];
+            }
+
+            // Shuffle in WASM
+            wasm.shuffleArray(ptr, arr.length);
+
+            // Read result
+            const shuffled = [];
+            for (let i = 0; i < arr.length; i++) {
+                shuffled.push(view[ptr / 4 + i]);
+            }
+
+            document.getElementById('shuffle-result').textContent =
+                `Shuffled: [${shuffled.join(', ')}]`;
+        }
+
+        function testTimestamp() {
+            const timestamp = wasm.getCurrentTimestamp();
+            const date = new Date(timestamp);
+            document.getElementById('time-result').textContent =
+                `Timestamp: ${timestamp} (${date.toLocaleString()})`;
+        }
+
+        let startTime = null;
+        function testElapsed() {
+            if (!startTime) {
+                startTime = wasm.getCurrentTimestamp();
+                document.getElementById('time-result').textContent =
+                    'Timer started! Click again to see elapsed time.';
+            } else {
+                const elapsed = wasm.getElapsedSeconds(startTime);
+                document.getElementById('time-result').textContent =
+                    `Elapsed: ${elapsed.toFixed(3)} seconds`;
+                startTime = null;
+            }
+        }
+
+        function testCallback() {
+            const value = parseInt(document.getElementById('callback-value').value);
+            wasm.processWithCallback(value);
+            document.getElementById('callback-result').textContent =
+                'Callback invoked! Check console output.';
+        }
+
+        function testBenchmark() {
+            const n = parseInt(document.getElementById('fib-n').value);
+            const time = wasm.benchmarkFibonacci(n);
+            const result = wasm.fibonacci(n);
+            document.getElementById('benchmark-result').textContent =
+                `fibonacci(${n}) = ${result}, took ${time.toFixed(3)}ms`;
+        }
+
+        loadWasm();
+    </script>
+</body>
+</html>

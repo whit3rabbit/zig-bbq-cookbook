@@ -1,0 +1,10 @@
+<!-- Load Zig language support for highlight.js -->
+<script src="{{ path_to_root }}zig.min.js"></script>
+<script>
+  // Register Zig language with highlight.js
+  document.addEventListener('DOMContentLoaded', (event) => {
+    document.querySelectorAll('code.language-zig').forEach((block) => {
+      hljs.highlightElement(block);
+    });
+  });
+</script>

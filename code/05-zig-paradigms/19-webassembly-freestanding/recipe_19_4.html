@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Recipe 19.4: String and Data Passing</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+        .demo-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .result {
+            background: #e7f3ff;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            border-left: 4px solid #007bff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input, textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recipe 19.4: String and Data Passing</h1>
+    <p>Demonstrating how to pass strings and data between Zig and JavaScript.</p>
+
+    <div class="demo-section">
+        <h3>Count Lowercase Letters</h3>
+        <input type="text" id="count-input" value="Hello World!" />
+        <button onclick="testCount()">Count</button>
+        <div class="result" id="count-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Uppercase Conversion</h3>
+        <input type="text" id="upper-input" value="hello world" />
+        <button onclick="testUppercase()">Convert to Uppercase</button>
+        <div class="result" id="upper-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Reverse String</h3>
+        <input type="text" id="reverse-input" value="racecar" />
+        <button onclick="testReverse()">Reverse</button>
+        <div class="result" id="reverse-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Concatenate Strings</h3>
+        <input type="text" id="concat1" value="Hello, " />
+        <input type="text" id="concat2" value="World!" />
+        <button onclick="testConcat()">Concatenate</button>
+        <div class="result" id="concat-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Parse Number</h3>
+        <input type="text" id="parse-input" value="-123" />
+        <button onclick="testParse()">Parse</button>
+        <div class="result" id="parse-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Format Number</h3>
+        <input type="number" id="format-input" value="12345" />
+        <button onclick="testFormat()">Format as String</button>
+        <div class="result" id="format-result"></div>
+    </div>
+
+    <div class="demo-section">
+        <h3>Word Count</h3>
+        <textarea id="word-input" rows="3">The quick brown fox jumps over the lazy dog</textarea>
+        <button onclick="testWordCount()">Count Words</button>
+        <div class="result" id="word-result"></div>
+    </div>
+
+    <script>
+        let wasm;
+
+        async function loadWasm() {
+            try {
+                const response = await fetch('recipe_19_4.wasm');
+                const bytes = await response.arrayBuffer();
+                const { instance } = await WebAssembly.instantiate(bytes);
+                wasm = instance.exports;
+                console.log('WASM module loaded');
+            } catch (error) {
+                console.error('Failed to load WASM:', error);
+                alert('Failed to load WASM. Ensure recipe_19_4.wasm is in the same directory.');
+            }
+        }
+
+        // Helper: Write string to WASM memory
+        function writeString(str) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(str);
+            const ptr = wasm.allocateBytes(bytes.length);
+            const view = new Uint8Array(wasm.memory.buffer);
+            for (let i = 0; i < bytes.length; i++) {
+                view[ptr + i] = bytes[i];
+            }
+            return { ptr, len: bytes.length };
+        }
+
+        // Helper: Read string from WASM buffer
+        function readStringFromBuffer() {
+            const ptr = wasm.getStringPtr();
+            const len = wasm.getStringLen();
+            const bytes = new Uint8Array(wasm.memory.buffer, ptr, len);
+            return new TextDecoder().decode(bytes);
+        }
+
+        function testCount() {
+            const input = document.getElementById('count-input').value;
+            const { ptr, len } = writeString(input);
+            const count = wasm.processString(ptr, len);
+            document.getElementById('count-result').textContent =
+                `Lowercase letters: ${count}`;
+        }
+
+        function testUppercase() {
+            const input = document.getElementById('upper-input').value;
+            const { ptr, len } = writeString(input);
+            wasm.uppercaseString(ptr, len);
+            const result = readStringFromBuffer();
+            document.getElementById('upper-result').textContent =
+                `Result: "${result}"`;
+        }
+
+        function testReverse() {
+            const input = document.getElementById('reverse-input').value;
+            const { ptr, len } = writeString(input);
+            wasm.reverseString(ptr, len);
+            const result = readStringFromBuffer();
+            document.getElementById('reverse-result').textContent =
+                `Result: "${result}"`;
+        }
+
+        function testConcat() {
+            const str1 = document.getElementById('concat1').value;
+            const str2 = document.getElementById('concat2').value;
+
+            const { ptr: ptr1, len: len1 } = writeString(str1);
+            const { ptr: ptr2, len: len2 } = writeString(str2);
+
+            wasm.concatenateStrings(ptr1, len1, ptr2, len2);
+            const result = readStringFromBuffer();
+            document.getElementById('concat-result').textContent =
+                `Result: "${result}"`;
+        }
+
+        function testParse() {
+            const input = document.getElementById('parse-input').value;
+            const { ptr, len } = writeString(input);
+            const result = wasm.parseNumber(ptr, len);
+            document.getElementById('parse-result').textContent =
+                `Parsed number: ${result}`;
+        }
+
+        function testFormat() {
+            const num = parseInt(document.getElementById('format-input').value);
+            wasm.formatNumber(num);
+            const result = readStringFromBuffer();
+            document.getElementById('format-result').textContent =
+                `Formatted string: "${result}"`;
+        }
+
+        function testWordCount() {
+            const input = document.getElementById('word-input').value;
+            const { ptr, len } = writeString(input);
+            const count = wasm.wordCount(ptr, len);
+            document.getElementById('word-result').textContent =
+                `Word count: ${count}`;
+        }
+
+        loadWasm();
+    </script>
+</body>
+</html>
