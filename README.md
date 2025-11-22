@@ -101,19 +101,20 @@ zig-bbq-cookbook/
 ├── build.zig.zon                # Package manifest
 ├── src/                         # Markdown recipes (documentation)
 │   ├── SUMMARY.md              # Table of contents
-│   ├── 00-bootcamp/            # Phase 0: Zig Bootcamp ✅
-│   ├── 01-foundation/          # Phase 1: Foundation & Philosophy ✅
-│   ├── 02-core/                # Phase 2: Core Recipes ✅
-│   ├── 03-advanced/            # Phase 3: Advanced Topics ✅
-│   ├── 04-specialized/         # Phase 4: Specialized Topics 🔄
-│   └── 05-zig-paradigms/       # Phase 5: Zig Paradigms ⏳
+│   ├── 00-bootcamp/            # Phase 0: Zig Bootcamp
+│   ├── 01-foundation/          # Phase 1: Foundation & Philosophy
+│   ├── 02-core/                # Phase 2: Core Recipes
+│   ├── 03-advanced/            # Phase 3: Advanced Topics
+│   ├── 04-specialized/         # Phase 4: Specialized Topics
+│   └── 05-zig-paradigms/       # Phase 5: Zig Paradigms
 ├── code/                        # Compilable .zig files (mirroring src/)
 │   ├── 00-bootcamp/            # Bootcamp code examples
 │   ├── 01-foundation/          # Foundation code examples
 │   ├── 02-core/                # Core recipes code
 │   ├── 03-advanced/            # Advanced topics code
-│   └── 04-specialized/         # Specialized topics code
-├── theme/                       # Custom mdBook theme
+│   ├── 04-specialized/         # Specialized topics code
+│   └── 05-zig-paradigms/       # Zig paradigms code
+├── theme/                       # Custom mdBook theme (syntax highlighting)
 ├── assets/                      # Images and static assets
 └── book/                        # Built documentation (generated)
 ```
@@ -221,5 +222,5 @@ Inspired by:
 ---
 
 <p align="center">
-  <strong>Happy Zigging! 🔥</strong>
+  <strong>Happy Zigging!</strong>
 </p>
