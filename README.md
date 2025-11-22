@@ -49,8 +49,6 @@ The Zig BBQ Cookbook is a comprehensive, cookbook-style guide teaching Zig progr
 - **Phase 4: Specialized Topics** - 47/47 recipes (100%)
 - **Phase 5: Zig Paradigms** - 32/32 recipes (100%)
 
-See [TODO.md](TODO.md) for detailed chapter breakdown and progress tracking.
-
 ## Quick Start
 
 ### Requirements
@@ -156,13 +154,6 @@ Contributions are welcome! When adding recipes:
 4. **Test thoroughly** - Run `zig test` to ensure code compiles and passes
 5. **Write markdown** - Create `.md` file in `src/` using `{{#include}}` directives
 6. **Verify build** - Run `mdbook build` to ensure documentation renders correctly
-7. **Update TODO.md** - Mark recipe as complete in progress tracker
-
-See [CLAUDE.md](CLAUDE.md) for detailed workflow documentation including:
-- Code-first documentation approach
-- Anchor system usage and naming conventions
-- Testing strategy
-- mdBook integration patterns
 
 ## Book Structure
 
@@ -223,7 +214,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 Built with:
 - [mdBook](https://rust-lang.github.io/mdBook/) - Documentation generator
 - [Zig](https://ziglang.org/) - The Zig programming language
-- Logo design by the Zig BBQ team
+
+Inspired by:
+- [Zig Cookbook](https://github.com/zigcc/zig-cookbook) - Another excellent Zig cookbook worth checking out!
 
 ---
 
